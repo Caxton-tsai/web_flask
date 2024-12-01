@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <meta name="description" content="" />
+    <meta name="author" content="" />
+    <title>我的AIP FUNCTION</title>
+    <script src="https://use.fontawesome.com/releases/v6.3.0/js/all.js" crossorigin="anonymous"></script>
+    <link href="https://fonts.googleapis.com/css?family=Saira+Extra+Condensed:500,700" rel="stylesheet" type="text/css" />
+    <link href="https://fonts.googleapis.com/css?family=Muli:400,400i,800,800i" rel="stylesheet" type="text/css" />
+    <link href="css/for_aip.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
+</head>
+<body id="page-top">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top" id="sideNav">
+        <a class="navbar-brand js-scroll-trigger" href="#page-top">
+            <span class="d-block d-lg-none">Caxton Tsai</span>
+            <span class="d-none d-lg-block"><img class="img-fluid img-profile rounded-circle mx-auto mb-2" src="/img/tsai.jpg" alt="..." /></span>
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+        <div class="collapse navbar-collapse" id="navbarResponsive">
+            <ul class="navbar-nav">
+                <li class="nav-item"><a class="nav-link js-scroll-trigger" href="/my_stock">GO TO MY_STOCK</a></li>
+                <li class="nav-item"><a class="nav-link js-scroll-trigger" href="/my_aip">GO TO MY_AIP</a></li>
+                <li class="nav-item"><a class="nav-link js-scroll-trigger" href="/my_cv">GO TO MY_CV</a></li>
+                <li class="nav-item"><a class="nav-link js-scroll-trigger" href="/for_signout">SIGN OUT</a></li>
+            </ul>
+        </div>
+    </nav>
+    
+    <div class="container-fluid p-0">
+        <section class="resume-section" id="labelframe">
+            <div class="resume-section-content">
+                <h2 class="mb-5">MY STOCK</h2>
+    
+                <!-- 購買股票區域 -->
+                <div class="subheading mb-0">股票買賣</div>
+                <div style="display: flex; align-items: center; margin-bottom: 12px;">
+                    <select id="transaction_type" style="margin-right: 12px;">
+                        <option value="buy">買入</option>
+                        <option value="sell">賣出</option>
+                    </select>
+                    <label for="stock_name" style="margin-right: 8px; color: black;">股票名稱：</label>
+                    <input type="text" id="stock_name" placeholder="輸入股票代號" style="margin-right: 12px;">
+                    <label for="stock_shares" style="margin-right: 8px; color: black;">選擇股數：</label>
+                    <input type="number" id="stock_shares" placeholder="輸入股數" style="margin-right: 12px;">
+                    <label for="stock_price" style="margin-right: 8px; color: black;">選擇價格：</label>
+                    <input type="number" id="stock_price" placeholder="輸入價格" style="margin-right: 12px;">
+                    <button class="btn btn-dark btn-lg" onclick="submitStockData()">送出</button>
+                </div>
+    
+                <!-- 股價變動通知區域 -->
+                <div class="subheading mb-0">股價變動通知</div>
+                <div style="display: flex; align-items: center; margin-bottom: 12px;">
+                    <select id="info_type" style="margin-right: 12px;">
+                        <option value="greater">大於</option>
+                        <option value="less">小於</option>
+                        <option value="equal">等於</option>
+                    </select>
+                    <label for="notify_stock_name" style="margin-right: 8px; color: black;">股票名稱：</label>
+                    <input type="text" id="notify_stock_name" placeholder="輸入股票代號" style="margin-right: 12px;">
+                    <label for="notify_stock_price" style="margin-right: 8px; color: black;">選擇價格：</label>
+                    <input type="number" id="notify_stock_price" placeholder="輸入價格" style="margin-right: 12px;">
+                    <button class="btn btn-dark btn-lg" onclick="submitNotification()">設定通知</button>
+                </div>
+    
+                <!-- 圓餅圖容器 -->
+                <div class="subheading mb-0">其他功能顯示</div>
+                <div>
+                    <button class="btn btn-dark btn-lg" onclick="select_chart_type()" style="margin-left: 150px;">顯示視覺化圖表</button>
+                    <button class="btn btn-dark btn-lg" onclick="select_other_function_type()" style="margin-left: 260px;">顯示其他功能</button>
+                </div>
+                <div>
+                    <div style="display: flex; align-items: center; margin-top: 20px; position: relative;">
+                        <canvas id="myPieChart" width="100" height="100" style="display: inline-block;"></canvas>
+                        <div style="position: absolute; left: 0px; top: -55px;">
+                            <select id="chart_type">
+                                <option value="stock_allocation_ratio">所持股票比例</option>
+                                <option value="stock_profit_and_loss">所持股票損益</option>
+                                <option value="Stock_movement">本日股票漲跌</option>
+                            </select>
+                        </div>
+                        <div style="position: absolute; left: 440px; top: -55px;">
+                            <select id="other_function_type">
+                                <option value="show_headlines">顯示新聞頭條</option>
+                                <option value="show_informatin_form">顯示股票資訊表</option>
+                            </select>
+                        </div>
+                        <div id="headlines_or_informationform" style="margin-top: 20px; margin-left: 50px; width: 500px; white-space: nowrap;"></div>
+                        <canvas id="myPieChart2" width="100" height="100" style="display: inline-block; margin-left: 120px;"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+    
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/for_stock.js"></script>
+</body>
+</html>

@@ -1,0 +1,12 @@
+flask==2.3.3
+werkzeug==2.3.7
+flask-assets==2.1.0
+flask-cors==4.0.1
+pymongo==4.7.3
+bcrypt==3.2.0
+numpy==1.24.3
+opencv-python==4.8.1.78
+python-dotenv==0.21.0 
+google-auth==2.36.0
+numpy==1.24.3
+
