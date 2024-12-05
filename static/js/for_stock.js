@@ -1,6 +1,7 @@
 document.addEventListener("DOMContentLoaded", () => {
     console.log("for_stock.js loaded");
-
+    ///////////////////////////////////////////////////////////////////////////////////////
+    //股票買賣區
     window.submitStockData = function() {
         const stockName = document.getElementById("stock_name").value;
         const stockShares = document.getElementById("stock_shares").value;
@@ -36,12 +37,12 @@ document.addEventListener("DOMContentLoaded", () => {
             if (data.success ) {
                 alert(successMessage);
             } else {
-                alert(data.return_message);
+                alert(data.return_message); //return請確認股票名稱輸入是否正確！
             }
         })
         .catch(error => console.error("Error:", error))
         .finally(() => {
-            // Re-enable the submit button after response
+            //Re-enable the submit button after response
             submitButton.disabled = false;
         });
     };
@@ -58,6 +59,52 @@ document.addEventListener("DOMContentLoaded", () => {
             show_stock_movement ();
         }
     }
+
+    ///////////////////////////////////////////////////////////////////////////////////////
+    //股價變動通知區
+    window.stock_price_change_notification = function(){
+        const stock_name = document.getElementById("notify_stock_name").value;
+        const set_stock_price = document.getElementById("notify_stock_price").value;
+        const info_type = document.getElementById("info_type").value;
+        const submitButton = document.querySelector("button[onclick='stock_price_change_notification()']");
+        
+        if(!stock_name || !set_stock_price) {
+            alert("請完整填寫所有欄位");
+            return;}
+        if(set_stock_price <=0){
+            alert("價格必須大於零");
+            return;
+        }
+        submitButton.disabled = true;
+        fetch("/for_stock_price_change_notification",{
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                stock_name: stock_name,
+                set_stock_price: set_stock_price,
+                info_type: info_type
+            })
+        })
+        .then(response => response.json())
+        .then(data =>{
+            if(data.success === false){
+                alert("請確認輸入的股票代號是否正確！");
+            }
+            else{
+                let info_type_chinese = (info_type === 'greater') ? "大於" : (info_type === 'less') ? "小於" : "等於";
+                alert(`成功加入通知，若是 ${stock_name} ${info_type_chinese} ${set_stock_price} 塊錢，會寄出信件通知！`);
+            }
+        })
+        .finally(()=>{
+            submitButton.disabled = false;
+        })
+        
+}
+
+    ///////////////////////////////////////////////////////////////////////////////////////
+    //視覺化圖表區
     let visualization_chart = null;
     window.show_piechart = function() {//圓餅圖
         fetch("/for_get_piechart_data")
@@ -170,8 +217,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     };
 
-///////////////////////////////////////////////////////////////////////////////////////
-
+    ///////////////////////////////////////////////////////////////////////////////////////
+    //顯示其他功能區
     window.select_other_function_type = function(){ //跑右邊功能，決定哪一個功能
         const selected_function = document.getElementById("other_function_type").value;
         if(selected_function === "show_headlines") {

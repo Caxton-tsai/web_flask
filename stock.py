@@ -6,9 +6,15 @@ import time
 import os
 from dotenv import load_dotenv
 from concurrent.futures import ThreadPoolExecutor, as_completed
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 
 load_dotenv()
 MONGO_CLIENT = os.getenv("MONGO_CLIENT")
+GOOGLE_EMAIL_ID = os.getenv("GOOGLE_EMAIL_ID")
+GOOGLE_APP_CODE = os.getenv("GOOGLE_APP_CODE")
+
 
 class MY_STOCK:
     def __init__(self):
@@ -73,7 +79,7 @@ class MY_STOCK:
             soup = BeautifulSoup(response.text, "html.parser")
 
             price_element = soup.select_one(".YMlKec.fxKbKc")
-            price = price_element.text
+            price = float(price_element.text.replace("$", "").replace(",", ""))
             print(f"{stock_symbol} 股票價格: {price}")
             return price
 
@@ -132,28 +138,63 @@ class MY_STOCK:
         print("花費時間", end_time)
         return stock_information
 
+    def check_stock_price_threshold(self):
+        stock_notification_scheduler = self.db.server_stock.find_one({"name": "stock_notification_scheduler"}).get("notifications", [])
+        stock_names = {stock["stock_name"] for stock in stock_notification_scheduler}
+        new_stock_price_dic = {name: self.get_stock_price(name) for name in stock_names}
+
+        comparison_funcs = {
+            "greater": lambda current, target: current > target,
+            "equal": lambda current, target: current == target,
+            "less": lambda current, target: current < target }
+
+        for scheduler_item in stock_notification_scheduler:
+            stock_name = scheduler_item["stock_name"]
+            current_price = new_stock_price_dic[stock_name]
+            target_price = scheduler_item["stock_price"]
+            info_type = scheduler_item["info_type"]
+            email = scheduler_item["email"]
+
+            if comparison_funcs[info_type](current_price, target_price):
+                self.send_gmail("股票價格波動通知信",email,stock_name,info_type,target_price)
+                self.db.server_stock.update_one(
+                    {"name": "stock_notification_scheduler"},
+                    {"$pull": {"notifications": scheduler_item}})
+
+    def send_gmail(self,subject, to_email, stock_name,info_type,target_price):
+        info_type = "大於" if info_type == "greater" else "小於" if info_type == "less" else "等於"
+
+        html_content = f"""
+        <html>
+        <body style="font-family: Arial, sans-serif; line-height: 1.6;">
+            <h1 style="color:  #ff3342;">股票波動通知</h1>
+            <p>您好，</p>
+            <p>此封信件是通知您購買的股票 <strong>{stock_name}</strong> 已經 <strong>{info_type}</strong> 了目標價 <strong>{target_price}</strong>！</p>
+            
+            <p>如有任何問題，您可以隨時聯繫我們。</p>
+            <p>
+            <p>謝謝！<br>團隊敬上</p>
+            
+        </body>
+        </html>
+        """
+
+        # 設定郵件內容
+        msg = MIMEMultipart("alternative")
+        msg["From"] = GOOGLE_EMAIL_ID
+        msg["To"] = to_email
+        msg["Subject"] = subject
+        msg.attach(MIMEText(html_content, "html"))
+
+        try:
+            # 發送郵件
+            with smtplib.SMTP("smtp.gmail.com", 587) as server:
+                server.starttls()
+                server.login(GOOGLE_EMAIL_ID, GOOGLE_APP_CODE)
+                server.sendmail(msg["From"], to_email, msg.as_string())
+                print("HTML郵件已成功寄出！")
+        except Exception as e:
+            print(f"發送郵件失敗: {e}")
 
 
-    def get_stock_movement(self, user_name):
-        users_stock_result = self.db.users_stock.find_one({"user_name": user_name})
-        exchanges = self.db.server_stock.find_one({"name": "exchanges_collection"})
-        stocks = [stock["stock_name"] for stock in users_stock_result["stocks"]]
-        print(stocks)
 
-    def test(self):
-        print("start")
-        
-        stocks = self.get_top100_us_stock()
-        for i in stocks:
-            self.db.users_stock.update_one(
-                {"user_name": "only test"},
-                {"$push":{
-                    "stocks":{
-                        "stock_name": i,
-                        "share_number": 100,
-                        "average_buy_price" :100
-                    }
-                }}
-            )
-        print("end")
- 

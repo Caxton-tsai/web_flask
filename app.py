@@ -11,6 +11,8 @@ from dotenv import load_dotenv
 from stock import MY_STOCK
 from google.oauth2 import id_token
 from google.auth.transport import requests
+from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.triggers.interval import IntervalTrigger
 
 load_dotenv()
 MONGO_CLIENT = os.getenv("MONGO_CLIENT")
@@ -59,6 +61,7 @@ def for_google_login():
                 "password": None,
                 "phone": None})
         session["name"] = name
+        session["email"] = email
         return redirect("/my_cv")
     else:
         return redirect("/login", error_message="google帳號登入失敗")
@@ -165,6 +168,7 @@ def signin():
     #看是否有找到會員資料
     if result != None:
         session["name"] = result["name"]
+        session["email"] = result["email"]
         return redirect("/my_cv")
     return render_template('login.html', error_message="帳號密碼錯誤")
 
@@ -314,6 +318,41 @@ def for_get_stock_information_form():
     stock_information = my_stock.get_stocks_information(session["name"])
     return jsonify(stock_information)
 
+@app.route("/for_stock_price_change_notification",methods=["POST"])
+def for_stock_price_change_notification():
+    data = request.json
+    stock_name = data.get("stock_name")
+    set_stock_price = float(data.get("set_stock_price"))
+    info_type = data.get("info_type")
+    
+    my_stock = MY_STOCK()
+    stock_price = my_stock.get_stock_price(stock_name)
+    if stock_price == False:
+        return jsonify({"success": False})
+    else:  # 加入排程
+        db.server_stock.update_one(
+            {"name": "stock_notification_scheduler"},
+            {
+                "$push": {
+                    "notifications": {
+                        "stock_name": stock_name,
+                        "email": session["email"],
+                        "stock_price": set_stock_price,
+                        "info_type": info_type}}},
+            upsert=True ) # 如果找不到，會自動插入新文檔
+        return jsonify({"success": True})
 
-app.run(port=3000)
+my_stock = MY_STOCK()
+scheduler = BackgroundScheduler()
+scheduler.add_job(
+    func=my_stock.check_stock_price_threshold,  #不加括號
+    trigger=IntervalTrigger(seconds=20),
+    id='check_stock_price_job',
+    name='檢查股價',
+    replace_existing=True
+)
+scheduler.start() 
+
+if __name__ == "__main__":
+    app.run(port=3000)
 
