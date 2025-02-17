@@ -62,6 +62,9 @@ class MY_STOCK:
             url_href = article["href"]  # 提取 href 屬性
             if title and url_href:
                 headlines_dic[f"{idx}. {title.text}"] = url_href
+        print("-----------------------------------------")
+        print(headlines_dic)
+        print("-----------------------------------------")
         return headlines_dic
         
     def get_stock_price(self,stock_symbol):
@@ -161,13 +164,13 @@ class MY_STOCK:
                     {"name": "stock_notification_scheduler"},
                     {"$pull": {"notifications": scheduler_item}})
 
-    def send_gmail(self,subject, to_email, stock_name,info_type,target_price):
+    def send_gmail(self, subject, to_email, stock_name, info_type, target_price):
         info_type = "大於" if info_type == "greater" else "小於" if info_type == "less" else "等於"
 
         html_content = f"""
         <html>
         <body style="font-family: Arial, sans-serif; line-height: 1.6;">
-            <h1 style="color:  #ff3342;">股票波動通知</h1>
+            <h1 style="color:  #ff3342;">股票價格波動通知</h1>
             <p>您好，</p>
             <p>此封信件是通知您購買的股票 <strong>{stock_name}</strong> 已經 <strong>{info_type}</strong> 了目標價 <strong>{target_price}</strong>！</p>
             
@@ -178,16 +181,14 @@ class MY_STOCK:
         </body>
         </html>
         """
-
-        # 設定郵件內容
-        msg = MIMEMultipart("alternative")
+       
+        msg = MIMEMultipart("alternative")  #設定郵件內容
         msg["From"] = GOOGLE_EMAIL_ID
         msg["To"] = to_email
         msg["Subject"] = subject
         msg.attach(MIMEText(html_content, "html"))
 
         try:
-            # 發送郵件
             with smtplib.SMTP("smtp.gmail.com", 587) as server:
                 server.starttls()
                 server.login(GOOGLE_EMAIL_ID, GOOGLE_APP_CODE)

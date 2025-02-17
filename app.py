@@ -37,12 +37,12 @@ def index():
 
 @app.route("/login") #登入帳號頁面
 def login():
-    error_message = None
     return render_template("login.html")
 
-@app.route("/for_get_google_client_id") #之後可以放其他東西
+@app.route("/config/google-client-id", methods=["GET"])
 def for_get_google_client_id():
-    return GOOGLE_CLIENT_ID
+    return jsonify({"google_client_id": GOOGLE_CLIENT_ID})
+
 
 @app.route("/google_login", methods=['POST'])
 def for_google_login():
@@ -81,7 +81,7 @@ def my_aip():
     else:
         return redirect("/login")
 
-@app.route("/for_load_img",methods =['POST']) #處理輸入照片
+@app.route("/image",methods =['POST']) #處理輸入照片
 def for_load_img():
     file = request.files['file']
     if file:
@@ -96,14 +96,15 @@ def for_load_img():
             db.users_createphoto.update_one(
                 {"name" : session["name"]},     # 查找條件
                 {"$set": {"gray_img": gray_img }})  # 更新操作
-        return jsonify({"gray_img": gray_img})
+        return jsonify({"gray_img": gray_img}), 200
     else:
-        return jsonify(success=False)
+        return jsonify(success=False), 400
 
-@app.route("/for_load_aip_img",methods=['POST'])
+@app.route("/aip_image",methods=['POST'])
 def for_load_aip_img():
     updatetype = request.form.get('updatetype') #選處理方式
     img = db.users_createphoto.find_one({"name" : session["name"]})
+    
     if img is not None:
         gray_img = img.get("gray_img")
         update_functions = {
@@ -115,8 +116,8 @@ def for_load_aip_img():
         db.users_createphoto.update_one(
             {"name": session["name"]},           # 查找條件
             {"$set": { updatetype : update_img}})  # 使用 $set 新增資料到 photo 欄位
-        return jsonify({updatetype : update_img})
-    return jsonify(success = False)
+        return jsonify({updatetype : update_img}), 200
+    return jsonify(success = False), 400
 
 
 @app.route("/for_signup",methods=["POST"]) #處理註冊
@@ -213,7 +214,7 @@ def my_stock():
     else:
         return redirect("/login")
 
-@app.route("/for_buy_my_stock", methods=["POST"])
+@app.route("/stock/buy", methods=["POST"])
 def for_buy_my_stock():
     data = request.json
     user_name = session["name"]
@@ -222,7 +223,7 @@ def for_buy_my_stock():
     stock_price = data.get("stock_price")
     my_stock = MY_STOCK()
     if my_stock.get_stock_price(stock_name) == 0: #當輸入的股票未找到
-        return jsonify({"success": False,"return_message":"請確認股票名稱輸入是否正確！"})
+        return jsonify({"success": False,"return_message":"請確認股票名稱輸入是否正確！"}), 400
     user_stock_record = db.users_stock.find_one({"user_name": user_name})
     if user_stock_record:
         stock_record = next((stock for stock in user_stock_record['stocks'] if stock['stock_name'] == stock_name), None)
@@ -256,9 +257,9 @@ def for_buy_my_stock():
                 "share_number": stock_shares,
                 "average_buy_price": stock_price}]})
 
-    return jsonify({"success": True})
+    return jsonify({"success": True}), 200
 
-@app.route("/for_sell_my_stock",methods=["POST"])
+@app.route("/stock/sell",methods=["POST"])
 def for_sell_my_stock():
     data = request.json
     user_name = session["name"]
@@ -268,12 +269,13 @@ def for_sell_my_stock():
     user_stock_record = db.users_stock.find_one({"user_name": user_name})
     
     if not user_stock_record:
-        return jsonify({"success": False ,"return_message":"無購買該股票紀錄！"})
+        return jsonify({"success": False ,"return_message":"無購買該股票紀錄！"}), 400
+        
     user_stock_record = next((stock for stock in user_stock_record['stocks'] if stock['stock_name'] == stock_name), None)
     if not user_stock_record:
-        return jsonify({"success": False ,"return_message":"無購買該股票紀錄！"})
+        return jsonify({"success": False ,"return_message":"無購買該股票紀錄！"}), 400
     elif user_stock_record["share_number"] < stock_shares:
-        return jsonify({"success": False ,"return_message":"購買股數小於輸入股數！"})
+        return jsonify({"success": False ,"return_message":"購買股數小於輸入股數！"}), 400
     else:
         average_buy_price = db.users_stock.find_one({"user_name": user_name, "stocks.stock_name": stock_name})["stocks"][0]["average_buy_price"]
         profit_status = stock_shares * stock_price - stock_shares * average_buy_price
@@ -288,9 +290,9 @@ def for_sell_my_stock():
             {"user_name": user_name},
             {"$pull": {
                 "stocks": {"stock_name": stock_name, "share_number": 0}}})
-        return jsonify({"success": True})
+        return jsonify({"success": True}), 200
 
-@app.route("/for_get_piechart_data")
+@app.route("/piechart_data")
 def for_get_chart_data(): #圓餅圖
     user_name = session["name"]
     user_stock_record = db.users_stock.find_one({"user_name": user_name})
@@ -302,7 +304,7 @@ def for_get_chart_data(): #圓餅圖
     data = {"labels": stock_labels, "values": stock_values}
     return jsonify(data)
 
-@app.route("/for_get_headlines_data", methods=["POST"])
+@app.route("/headlines_data", methods=["POST"])
 def for_get_headlines_data():
     data = request.json
     stock_name = data.get("stock_name")
@@ -312,13 +314,13 @@ def for_get_headlines_data():
     stock_headlines_dic = my_stock.get_stock_headlines(stock_name)
     return jsonify(stock_headlines_dic)
 
-@app.route("/for_get_stock_information_form")
+@app.route("/stock/information")
 def for_get_stock_information_form():
     my_stock = MY_STOCK()
     stock_information = my_stock.get_stocks_information(session["name"])
     return jsonify(stock_information)
 
-@app.route("/for_stock_price_change_notification",methods=["POST"])
+@app.route("/stock/price/notification",methods=["POST"])
 def for_stock_price_change_notification():
     data = request.json
     stock_name = data.get("stock_name")
@@ -342,17 +344,20 @@ def for_stock_price_change_notification():
             upsert=True ) # 如果找不到，會自動插入新文檔
         return jsonify({"success": True})
 
-my_stock = MY_STOCK()
-scheduler = BackgroundScheduler()
-scheduler.add_job(
-    func=my_stock.check_stock_price_threshold,  #不加括號
-    trigger=IntervalTrigger(seconds=20),
-    id='check_stock_price_job',
-    name='檢查股價',
-    replace_existing=True
-)
-scheduler.start() 
+def start_scheduler():
+    my_stock = MY_STOCK()
+    scheduler = BackgroundScheduler()
+    scheduler.add_job(
+        func=my_stock.check_stock_price_threshold,  # 不加括號，確保傳入函式參考
+        trigger=IntervalTrigger(seconds=1),
+        id="check_stock_price_job",
+        name="檢查股價",
+        replace_existing=True
+    )
+    scheduler.start()
+    return scheduler  # 返回 scheduler 物件，方便管理
 
 if __name__ == "__main__":
-    app.run(port=3000)
+    scheduler = start_scheduler() #要先啟動排程，不然會被app.run() block
+    app.run(port=3000) 
 
