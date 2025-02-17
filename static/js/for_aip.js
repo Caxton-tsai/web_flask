@@ -45,7 +45,7 @@ window.addEventListener('DOMContentLoaded', event => {
     const uploadFile = function() {
         event.preventDefault();
         const formData = new FormData(document.getElementById('uploadForm'));
-        fetch('/for_load_img', {
+        fetch('/image', {
             method: 'POST',
             body: formData,
         })
@@ -64,7 +64,7 @@ window.addEventListener('DOMContentLoaded', event => {
         event.preventDefault();
         const formData = new FormData();
         formData.append('updatetype',filterType)
-        fetch('/for_load_aip_img',{
+        fetch('/aip_image',{
             method:'POST',
             body: formData
         })

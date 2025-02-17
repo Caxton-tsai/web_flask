@@ -2,7 +2,7 @@
 // 初始化 Google API 並渲染按鈕
 window.onload = async function () {
     //async/await保證fetch完成之後才進行google.accounts.id.initialize動作。
-    const response = await fetch("/for_get_google_client_id");
+    const response = await fetch("/config/google-client-id");
     const clientId = await response.text();  // 獲取 client_id
 
     google.accounts.id.initialize({

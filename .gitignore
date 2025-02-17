@@ -4,3 +4,10 @@
 # 忽略 Python 編譯文件
 __pycache__/
 *.pyc
+
+# 忽略 jsconfig.json
+jsconfig.json
+
+zzz.py
+
+gemini_test.py

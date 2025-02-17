@@ -18,7 +18,7 @@ document.addEventListener("DOMContentLoaded", () => {
         submitButton.disabled = true;
         console.log("start to post!");
         // 根據 buy_or_sell 決定要執行的 fetch 路由
-        const fetchURL = buy_or_sell === "buy" ? "/for_buy_my_stock" : "/for_sell_my_stock";
+        const fetchURL = buy_or_sell === "buy" ? "/stock/buy" : "/stock/sell";
         const successMessage = buy_or_sell === "buy" ? "股票資料已成功儲存！" : "賣出股票資料已成功儲存！";
 
         fetch(fetchURL, {
@@ -76,7 +76,7 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
         submitButton.disabled = true;
-        fetch("/for_stock_price_change_notification",{
+        fetch("/stock/price/notification",{
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
@@ -107,7 +107,7 @@ document.addEventListener("DOMContentLoaded", () => {
     //視覺化圖表區
     let visualization_chart = null;
     window.show_piechart = function() {//圓餅圖
-        fetch("/for_get_piechart_data")
+        fetch("/piechart_data")
             .then(response => response.json())
             .then(data => {
                 
@@ -136,7 +136,7 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     window.show_horizontal_bar_chart = function() { // 水平條形圖
-        fetch("/for_get_stock_information_form") // 替換為你的後端 API
+        fetch("/stock/information") // 替換為你的後端 API
             .then(response => response.json())
             .then(data => {
                 const canvas = document.getElementById("myPieChart");
@@ -238,7 +238,7 @@ document.addEventListener("DOMContentLoaded", () => {
             return;}
         console.log("start to post!");
 
-        fetch("/for_get_headlines_data", {
+        fetch("/headlines_data", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
@@ -279,7 +279,7 @@ document.addEventListener("DOMContentLoaded", () => {
     
     window.show_informatin_form = function() {
         alert("需要時間搜尋資料，請稍等～");
-        fetch('/for_get_stock_information_form')
+        fetch('/stock/information')
             .then(response => response.json())
             .then(data => {
                 const tableContainer = document.getElementById('headlines_or_informationform');
