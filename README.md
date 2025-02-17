@@ -53,10 +53,5 @@
 
 **請注意：**  請勿將這些敏感資訊直接寫在程式碼中，而是使用 `.env` 檔案和 `python-dotenv` 套件來管理。
 
-## 安裝步驟
 
-1.  複製專案
-2.  建立 `.env` 檔案，並在其中設定環境變數。
-3.  安裝相依套件：`pip install -r requirements.txt` (請參考下方 `requirements.txt` 檔案內容)
-4.  執行應用程式：`python app.py`
 
